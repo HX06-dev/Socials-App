@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 function Login() {
@@ -11,6 +12,8 @@ function Login() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
+
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
