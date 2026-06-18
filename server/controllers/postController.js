@@ -1,4 +1,5 @@
 const Post = require('../models/Post')
+const User = require('../models/User')
 
 // CREATE POST
 const createPost = async (req, res) => {
@@ -19,17 +20,34 @@ const createPost = async (req, res) => {
   }
 }
 
-// GET ALL POSTS
+// GET FOLLOWED POSTS
 const getFeedPosts = async (req, res) => {
   try {
-    const posts = await Post.find()
+    const currentUser = await User.findById(req.user.id)
+
+    const userIds = [...currentUser.following, req.user.id]
+
+    const posts = await Post.find({ author: { $in: userIds } })
       .populate('author', 'username profilePicture')
-      .sort({ createdAt: -1 })  // newest first
+      .sort({ createdAt: -1 })
 
     res.status(200).json(posts)
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
+}
+
+// GET ALL POSTS
+const getAllPosts = async (req, res) => {
+    try {
+      const posts = await Post.find()
+        .populate('author', 'username profilePicture')
+        .sort({ createdAt: -1 })
+
+      res.status(200).json(posts)
+    } catch (err) {
+      res.status(500).json({ message: err.message })
+    }
 }
 
 const likePost = async (req, res) => {
@@ -83,4 +101,4 @@ const addComment = async (req, res) => {
   }
 }
 
-module.exports = { createPost, getFeedPosts, likePost, addComment }
+module.exports = { createPost, getFeedPosts, getAllPosts, likePost, addComment }

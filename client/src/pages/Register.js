@@ -19,6 +19,8 @@ function Register() {
         try {
             const res = await axios.post('http://localhost:5000/auth/register', formData)
             localStorage.setItem('token', res.data.token)
+            localStorage.setItem('userId', res.data.user.id)
+            localStorage.setItem('username', res.data.user.username)
             alert('Registered successfully!')
         } catch (err) {
             setError(err.response.data.message)

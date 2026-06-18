@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 function Feed() {
@@ -7,13 +8,17 @@ function Feed() {
   const [commentText, setCommentText] = useState({})  // tracks comment input per post
   const token = localStorage.getItem('token')
 
+  const navigate = useNavigate()
+
   useEffect(() => {
     fetchPosts()
   }, [])
 
   const fetchPosts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/posts')
+      const res = await axios.get('http://localhost:5000/posts', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
       setPosts(res.data)
     } catch (err) {
       console.error(err)
@@ -79,46 +84,49 @@ function Feed() {
       </form>
 
       {/* Posts list */}
-      {posts.map((post) => (
-        <div key={post._id} style={{ border: '1px solid gray', margin: '10px', padding: '10px' }}>
-          
-          {/* Post header */}
-          <strong>{post.author.username}</strong>
-          <p>{post.content}</p>
-          <small>{new Date(post.createdAt).toLocaleString()}</small>
+      {posts.length === 0 ? (
+        <p>You're not following anyone yet. Find people to follow by visiting their profiles!</p>
+      ) : (
+        posts.map((post) => (
+          <div key={post._id} style={{ border: '1px solid gray', margin: '10px', padding: '10px' }}>
+            <strong
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate(`/profile/${post.author._id}`)}
+            >
+              {post.author.username}
+            </strong>
+            <p>{post.content}</p>
+            <small>{new Date(post.createdAt).toLocaleString()}</small>
 
-          {/* Like button */}
-          <div>
-            <button onClick={() => handleLike(post._id)}>
-              ❤️ {post.likes.length}
-            </button>
+            <div>
+              <button onClick={() => handleLike(post._id)}>
+                ❤️ {post.likes.length}
+              </button>
+            </div>
+
+            <div>
+              {post.comments.map((comment, index) => (
+                <div key={index}>
+                  <strong>{comment.user.username}</strong>: {comment.text}
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <input
+                type='text'
+                placeholder='Write a comment...'
+                value={commentText[post._id] || ''}
+                onChange={(e) => setCommentText({
+                  ...commentText,
+                  [post._id]: e.target.value
+                })}
+              />
+              <button onClick={() => handleComment(post._id)}>Comment</button>
+            </div>
           </div>
-
-          {/* Comments */}
-          <div>
-            {post.comments.map((comment, index) => (
-              <div key={index}>
-                <strong>{comment.user.username}</strong>: {comment.text}
-              </div>
-            ))}
-          </div>
-
-          {/* Add comment */}
-          <div>
-            <input
-              type='text'
-              placeholder='Write a comment...'
-              value={commentText[post._id] || ''}
-              onChange={(e) => setCommentText({ 
-                ...commentText, 
-                [post._id]: e.target.value 
-              })}
-            />
-            <button onClick={() => handleComment(post._id)}>Comment</button>
-          </div>
-
-        </div>
-      ))}
+        ))
+      )}
     </div>
   )
 }
